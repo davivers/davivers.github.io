@@ -1,0 +1,97 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { getPosts, formatDate, readingTime, withBase } from '../../utils';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const { Content, headings } = await render(post);
+const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
+---
+
+<Base title={post.data.title} description={post.data.description}>
+  <nav class="crumbs">
+    <a href={withBase('/blog/')}>Blog</a> <span class="muted">›</span>
+    <span class="muted">{post.data.title}</span>
+  </nav>
+
+  <header class="post-head">
+    <h1>{post.data.title}</h1>
+    <div class="meta muted">
+      <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
+      <span>·</span><span>{readingTime(post)}</span>
+    </div>
+    <div class="tags">{post.data.tags.map((t) => <span class="tag">#{t}</span>)}</div>
+  </header>
+
+  {toc.length > 2 && (
+    <details class="toc">
+      <summary>Neste write-up</summary>
+      <ul>
+        {toc.map((h) => (
+          <li class={`d${h.depth}`}><a href={`#${h.slug}`}>{h.text}</a></li>
+        ))}
+      </ul>
+    </details>
+  )}
+
+  <article class="prose">
+    <Content />
+  </article>
+
+  <p class="back"><a href={withBase('/blog/')}>← Voltar para o blog</a></p>
+</Base>
+
+<style>
+  .crumbs { font-size: 0.9rem; margin-bottom: 20px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .post-head h1 { font-size: 1.9rem; margin: 0 0 8px; letter-spacing: -0.01em; }
+  .meta { font-size: 0.85rem; display: flex; gap: 6px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .toc {
+    margin: 24px 0 0; padding: 12px 16px; border-radius: 10px;
+    background: var(--card); border: 1px solid var(--line); font-size: 0.92rem;
+  }
+  .toc summary { cursor: pointer; font-weight: 600; }
+  .toc ul { margin: 8px 0 0; padding-left: 18px; }
+  .toc .d3 { margin-left: 14px; font-size: 0.88rem; }
+  .back { margin-top: 40px; }
+
+  .prose { margin-top: 28px; }
+  .prose :global(h2) {
+    font-size: 1.35rem; margin: 2em 0 0.6em;
+    text-decoration: underline; text-decoration-color: var(--heading-line);
+    text-decoration-thickness: 4px; text-underline-offset: 6px;
+  }
+  .prose :global(h3) { font-size: 1.12rem; margin: 1.6em 0 0.5em; }
+  .prose :global(p), .prose :global(li) { font-size: 1.02rem; }
+  .prose :global(img) { border-radius: 10px; margin: 1.2em auto; }
+  .prose :global(blockquote) {
+    margin: 1.2em 0; padding: 10px 16px; border-left: 4px solid var(--accent);
+    background: var(--card); border-radius: 0 8px 8px 0;
+  }
+  .prose :global(blockquote p) { margin: 0.3em 0; }
+  .prose :global(:not(pre) > code) {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.86em;
+    padding: 0.15em 0.4em; border-radius: 5px; background: var(--code-bg);
+  }
+  .prose :global(pre) {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.55;
+    padding: 14px 16px; border-radius: 10px; overflow-x: auto;
+    border: 1px solid var(--line);
+  }
+  .prose :global(pre code) { font-family: inherit; }
+  .prose :global(table) { width: 100%; border-collapse: collapse; font-size: 0.92rem; display: block; overflow-x: auto; }
+  .prose :global(th), .prose :global(td) { border: 1px solid var(--line); padding: 6px 10px; text-align: left; }
+  .prose :global(th) { background: var(--card); }
+  .prose :global(hr) { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+
+  :global(:root[data-theme='dark']) .prose :global(.astro-code),
+  :global(:root[data-theme='dark']) .prose :global(.astro-code span) {
+    color: var(--shiki-dark) !important;
+    background-color: var(--shiki-dark-bg) !important;
+  }
+</style>

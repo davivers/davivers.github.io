@@ -1,0 +1,50 @@
+---
+import Base from '../../layouts/Base.astro';
+import PostList from '../../components/PostList.astro';
+import { getPosts } from '../../utils';
+
+const posts = await getPosts();
+const tags = [...new Set(posts.flatMap((p) => p.data.tags))].sort();
+---
+
+<Base title="Blog">
+  <h1 class="section-title page-title">Blog</h1>
+  <p class="muted lead">Write-ups de detecção, investigações, labs e notas de campo.</p>
+
+  {tags.length > 1 && (
+    <div class="filters" role="group" aria-label="Filtrar por tag">
+      <button class="chip on" data-tag="">todos</button>
+      {tags.map((t) => <button class="chip" data-tag={t}>#{t}</button>)}
+    </div>
+  )}
+
+  <div id="post-list" data-tags={JSON.stringify(posts.map((p) => p.data.tags))}>
+    <PostList posts={posts} />
+  </div>
+  {posts.length === 0 && <p class="muted">Nenhum post ainda.</p>}
+</Base>
+
+<script>
+  const wrap = document.getElementById('post-list')!;
+  const tagsPer: string[][] = JSON.parse(wrap.dataset.tags || '[]');
+  const items = [...wrap.querySelectorAll('li')];
+  document.querySelectorAll<HTMLButtonElement>('.chip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.chip').forEach((c) => c.classList.remove('on'));
+      chip.classList.add('on');
+      const t = chip.dataset.tag;
+      items.forEach((li, i) => { li.hidden = !!t && !tagsPer[i].includes(t); });
+    });
+  });
+</script>
+
+<style>
+  .page-title { font-size: 1.5rem; margin-bottom: 8px; }
+  .lead { margin: 0 0 20px; }
+  .filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .chip {
+    font: inherit; font-size: 0.8rem; font-weight: 600; padding: 4px 10px; border-radius: 999px;
+    border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer;
+  }
+  .chip.on, .chip:hover { background: var(--tag-bg); color: var(--accent); border-color: transparent; }
+</style>

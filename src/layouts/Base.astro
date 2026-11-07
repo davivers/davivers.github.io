@@ -1,0 +1,160 @@
+---
+import '../styles/global.css';
+import { site, nav } from '../site.config';
+
+interface Props {
+  title?: string;
+  description?: string;
+  wide?: boolean;
+}
+
+const { title, description = site.description, wide = false } = Astro.props;
+const pageTitle = title ? `${title} — ${site.name}` : `${site.name} — Homepage`;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const path = Astro.url.pathname.replace(base, '') || '/';
+const link = (href: string) => `${base}${href}`;
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <link rel="icon" href={link('/favicon.svg')} type="image/svg+xml" />
+    <link rel="alternate" type="application/rss+xml" title={site.name} href={link('/rss.xml')} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script is:inline>
+      (function () {
+        var t = null;
+        try { t = localStorage.getItem('theme'); } catch (e) {}
+        if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = t;
+      })();
+    </script>
+  </head>
+  <body>
+    <header class="nav">
+      <div class="container container-wide nav-inner">
+        <a href={link('/')} class="logo rounded" aria-label="Home">
+          <svg class="logo-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <path fill="currentColor" d="M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5l-8-3Zm0 2.2 6 2.2V11c0 3.9-2.5 7.4-6 8.9-3.5-1.5-6-5-6-8.9V6.4l6-2.2Zm-2.5 5.3a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm5 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z"/>
+          </svg>
+          <span>{site.name}</span>
+        </a>
+        <nav class="links">
+          {nav.map((item) => (
+            <a href={link(item.href)} class:list={['nav-link', { active: path.startsWith(item.href) }]}>
+              {item.label}
+            </a>
+          ))}
+          <a href={site.sourceUrl} class="nav-link source" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.9 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.2c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .5Z"/></svg>
+            Código
+          </a>
+        </nav>
+        <div class="actions">
+          <button id="theme-toggle" class="toggle" aria-label="Alternar tema claro/escuro">
+            <svg class="i-moon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+            <svg class="i-sun" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><g fill="currentColor"><circle cx="12" cy="12" r="4.5"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></g></svg>
+          </button>
+          <button id="menu-toggle" class="menu-btn" aria-label="Menu" aria-expanded="false">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+          <div id="menu" class="menu" hidden>
+            <a href={link('/')}>Home</a>
+            {nav.map((item) => <a href={link(item.href)}>{item.label}</a>)}
+            <a href={site.sourceUrl} target="_blank" rel="noopener">Código</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="page-enter">
+      <div class:list={['container', { 'container-wide': wide }]}>
+        <slot />
+        <footer class="footer">
+          © {new Date().getFullYear()} {site.name}. Todos os direitos reservados.
+        </footer>
+      </div>
+    </main>
+
+    <script>
+      const root = document.documentElement;
+      document.getElementById('theme-toggle')?.addEventListener('click', () => {
+        const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        root.dataset.theme = next;
+        try { localStorage.setItem('theme', next); } catch (e) {}
+      });
+      const btn = document.getElementById('menu-toggle');
+      const menu = document.getElementById('menu');
+      btn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const open = menu!.hidden;
+        menu!.hidden = !open;
+        btn.setAttribute('aria-expanded', String(open));
+      });
+      document.addEventListener('click', () => {
+        if (menu && !menu.hidden) { menu.hidden = true; btn?.setAttribute('aria-expanded', 'false'); }
+      });
+    </script>
+
+    <style>
+      .nav {
+        position: fixed;
+        inset: 0 0 auto 0;
+        z-index: 10;
+        background: var(--nav-bg);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+      .nav-inner { display: flex; align-items: center; gap: 16px; height: 56px; }
+      .logo {
+        display: inline-flex; align-items: center; gap: 8px;
+        font-weight: 800; font-size: 1.1rem; color: var(--fg); letter-spacing: -0.01em;
+      }
+      .logo:hover { text-decoration: none; }
+      .logo-icon { transition: transform 0.2s ease; }
+      .logo:hover .logo-icon { transform: rotate(18deg); }
+      .links { display: flex; gap: 4px; margin-left: 12px; flex: 1; }
+      .nav-link {
+        color: var(--fg); padding: 6px 10px; border-radius: 6px; font-size: 0.95rem;
+        display: inline-flex; align-items: center; gap: 6px;
+      }
+      .nav-link:hover { text-decoration: underline; text-underline-offset: 4px; }
+      .nav-link.active { background: var(--accent); color: var(--bg); }
+      .nav-link.active:hover { text-decoration: none; }
+      .actions { display: flex; gap: 8px; margin-left: auto; position: relative; }
+      .toggle, .menu-btn {
+        width: 40px; height: 40px; border-radius: 8px; border: 0; cursor: pointer;
+        display: grid; place-items: center;
+      }
+      .toggle { background: var(--toggle-bg); color: var(--toggle-fg); transition: transform 0.2s ease; }
+      .toggle:active { transform: scale(0.92) rotate(-20deg); }
+      :global(:root[data-theme='dark']) .i-moon,
+      :global(:root:not([data-theme='dark'])) .i-sun { display: none; }
+      .menu-btn { display: none; background: transparent; color: var(--fg); border: 1px solid var(--line); }
+      .menu {
+        position: absolute; right: 0; top: 48px; min-width: 180px; padding: 6px;
+        background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; flex-direction: column;
+      }
+      .menu[hidden] { display: none; }
+      .menu a { color: var(--fg); padding: 8px 12px; border-radius: 6px; }
+      .menu a:hover { background: var(--card); text-decoration: none; }
+      .footer { text-align: center; font-size: 0.85rem; opacity: 0.45; margin-top: 56px; }
+      @media (max-width: 640px) {
+        .links { display: none; }
+        .menu-btn { display: grid; }
+      }
+    </style>
+  </body>
+</html>

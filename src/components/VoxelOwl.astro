@@ -1,0 +1,314 @@
+---
+// Coruja vigia em voxel, gerada em código com Three.js (sem arquivo de modelo).
+---
+
+<div class="voxel-wrap" aria-hidden="true">
+  <div id="voxel-owl" class="voxel"></div>
+  <div class="voxel-spinner"></div>
+</div>
+
+<script>
+  import * as THREE from 'three';
+  import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+  const C = {
+    body: 0x8a5a36,
+    bodyDark: 0x6a4226,
+    wing: 0x5e3a20,
+    belly: 0xe1c095,
+    spot: 0xa8774a,
+    face: 0xf3e2c6,
+    eye: 0xf6c230,
+    beak: 0xe88a2a,
+    feet: 0xe8962f,
+    log: 0x6b4a2b,
+    logRing: 0xc9a06a,
+    grass: 0x6fbf5a,
+    grassDark: 0x4f9a42,
+    dirt: 0x8c6a46,
+    pupil: 0x16161a,
+    glint: 0xffffff,
+  };
+
+  type V = [number, number, number, number];
+  const voxels = new Map<string, V>();
+  const key = (x: number, y: number, z: number) => `${x},${y},${z}`;
+  const put = (x: number, y: number, z: number, c: number) => voxels.set(key(x, y, z), [x, y, z, c]);
+  const has = (x: number, y: number, z: number) => voxels.has(key(x, y, z));
+
+  // --- Corpo (elipsoide) ---
+  const cx = 0, cy = 8, rx = 5.6, ry = 6.6, rz = 4.3;
+  const inBody = (x: number, y: number, z: number) =>
+    ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 + (z / rz) ** 2 <= 1;
+  for (let x = -6; x <= 6; x++)
+    for (let y = 1; y <= 15; y++)
+      for (let z = -5; z <= 5; z++) if (inBody(x, y, z)) put(x, y, z, C.body);
+
+  const frontZ = (x: number, y: number) => {
+    for (let z = 6; z >= -6; z--) if (has(x, y, z)) return z;
+    return null;
+  };
+
+  // Barriga com manchas em "V"
+  for (let x = -4; x <= 4; x++)
+    for (let y = 2; y <= 8; y++) {
+      const z = frontZ(x, y);
+      if (z === null || Math.abs(x) > 4 - (y < 3 ? 1 : 0)) continue;
+      const spot = (y % 2 === 0) && ((x + y) % 4 === 0);
+      put(x, y, z, spot ? C.spot : C.belly);
+    }
+
+  // Asas nas laterais
+  for (const [x, y, z, c] of [...voxels.values()]) {
+    if (Math.abs(x) >= 5 && y >= 2 && y <= 10 && c === C.body) put(x, y, z, C.wing);
+    if (Math.abs(x) === 4 && y >= 3 && y <= 8 && z <= 1 && c === C.body) put(x, y, z, C.wing);
+  }
+  // Ponta das asas abaixo do corpo
+  for (const s of [-1, 1]) for (let z = -2; z <= 1; z++) put(s * 4, 1, z, C.wing);
+
+  // Disco facial + olhos
+  const eyes = [
+    { x: -2.4, y: 10.6 },
+    { x: 2.4, y: 10.6 },
+  ];
+  for (let x = -5; x <= 5; x++)
+    for (let y = 8; y <= 14; y++) {
+      const z = frontZ(x, y);
+      if (z === null) continue;
+      for (const e of eyes) {
+        const d = Math.hypot(x - e.x, y - e.y);
+        if (d <= 2.7) { put(x, y, z, C.face); if (has(x, y, z - 1)) put(x, y, z - 1, C.face); }
+      }
+    }
+  for (let x = -5; x <= 5; x++)
+    for (let y = 8; y <= 14; y++) {
+      const z = frontZ(x, y);
+      if (z === null) continue;
+      for (const e of eyes) if (Math.hypot(x - e.x, y - e.y) <= 1.75) { put(x, y, z, C.eye); if (has(x, y, z - 1)) put(x, y, z - 1, C.eye); }
+    }
+
+  // Sobrancelhas / topo da cabeça mais escuro
+  for (let x = -5; x <= 5; x++) {
+    const z = frontZ(x, 13);
+    if (z !== null && Math.abs(x) >= 1) put(x, 13, z, C.bodyDark);
+  }
+
+  // Bico
+  const bz = (frontZ(0, 9) ?? 4) + 1;
+  put(0, 9, bz, C.beak);
+  put(0, 8, bz, C.beak);
+  put(0, 9, bz - 1, C.beak);
+
+  // Tufos das orelhas
+  for (const s of [-1, 1]) {
+    put(s * 3, 14, 0, C.bodyDark);
+    put(s * 3, 15, 0, C.bodyDark);
+    put(s * 4, 15, 0, C.bodyDark);
+    put(s * 4, 16, 0, C.bodyDark);
+    put(s * 3, 14, 1, C.bodyDark);
+  }
+
+  // Pés
+  for (const s of [-1, 1])
+    for (let dx = 0; dx <= 1; dx++) {
+      put(s * 2 + (s < 0 ? -dx : dx) * 0, 0, 2 + dx, C.feet);
+      put(s * 2 - 1 + dx, 0, 3, C.feet);
+    }
+
+  // Galho
+  for (let x = -9; x <= 9; x++)
+    for (let y = -2; y <= -1; y++)
+      for (let z = -1; z <= 1; z++) {
+        const end = Math.abs(x) === 9;
+        put(x, y, z, end ? C.logRing : C.log);
+      }
+  // Folhinhas
+  const leaves: [number, number, number][] = [
+    [8, 0, 0], [8, 0, 1], [9, 0, 0], [8, 1, 0], [7, 0, -1],
+    [-8, 0, 0], [-8, 0, -1], [-9, 0, 0], [-8, 1, 0],
+  ];
+  for (const [x, y, z] of leaves) put(x, y, z, (x + z) % 2 ? C.grass : C.grassDark);
+
+  // Ilhota
+  for (let x = -7; x <= 7; x++)
+    for (let z = -5; z <= 5; z++) {
+      const r = Math.hypot(x, z * 1.3);
+      if (r > 7.2) continue;
+      put(x, -6, z, (x * 7 + z * 3) % 5 === 0 ? C.grassDark : C.grass);
+      if (r <= 6) put(x, -7, z, C.dirt);
+      if (r <= 4) put(x, -8, z, C.dirt);
+    }
+  // Tronco ligando galho à ilhota
+  for (let y = -5; y <= -3; y++) for (const x of [-1, 0]) for (const z of [0]) put(x, y, z, C.log);
+
+  // --- Cena ---
+  const host = document.getElementById('voxel-owl')!;
+  const spinner = host.parentElement!.querySelector('.voxel-spinner') as HTMLElement;
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  host.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const target = new THREE.Vector3(0, 3.5, 0);
+  const scale = 15;
+  const camera = new THREE.OrthographicCamera(-scale, scale, scale, -scale, 0.1, 500);
+  const restPos = new THREE.Vector3(32, 22, 52);
+  const startPos = new THREE.Vector3(-60, 40, -10);
+  camera.position.copy(startPos);
+  camera.lookAt(target);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 1.6));
+  const sun = new THREE.DirectionalLight(0xffffff, 2.2);
+  sun.position.set(20, 40, 30);
+  scene.add(sun);
+  const fill = new THREE.DirectionalLight(0xffe6c7, 0.6);
+  fill.position.set(-30, 10, -20);
+  scene.add(fill);
+
+  const owl = new THREE.Group();
+  scene.add(owl);
+
+  const geo = new THREE.BoxGeometry(1, 1, 1);
+  const mat = new THREE.MeshStandardMaterial({ roughness: 0.85, metalness: 0 });
+  const list = [...voxels.values()];
+  const mesh = new THREE.InstancedMesh(geo, mat, list.length);
+  const m = new THREE.Matrix4();
+  const col = new THREE.Color();
+  list.forEach(([x, y, z, c], i) => {
+    m.makeTranslation(x, y, z);
+    mesh.setMatrixAt(i, m);
+    mesh.setColorAt(i, col.setHex(c));
+  });
+  owl.add(mesh);
+
+  // Pupilas móveis
+  const pupilMat = new THREE.MeshStandardMaterial({ color: C.pupil, roughness: 0.4 });
+  const glintMat = new THREE.MeshBasicMaterial({ color: C.glint });
+  const pupils = eyes.map((e) => {
+    const g = new THREE.Group();
+    const p = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.6, 0.4), pupilMat);
+    const s = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.1), glintMat);
+    s.position.set(0.4, 0.4, 0.25);
+    g.add(p, s);
+    const z = (frontZ(Math.round(e.x), Math.round(e.y)) ?? 3) + 0.65;
+    g.position.set(e.x, e.y, z);
+    g.userData.base = g.position.clone();
+    owl.add(g);
+    return g;
+  });
+
+  // Sombra suave
+  const sh = document.createElement('canvas');
+  sh.width = sh.height = 128;
+  const ctx = sh.getContext('2d')!;
+  const grd = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+  grd.addColorStop(0, 'rgba(0,0,0,0.28)');
+  grd.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, 128, 128);
+  const shadow = new THREE.Mesh(
+    new THREE.PlaneGeometry(22, 18),
+    new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(sh), transparent: true, depthWrite: false })
+  );
+  shadow.rotation.x = -Math.PI / 2;
+  shadow.position.y = -9.2;
+  scene.add(shadow);
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.target.copy(target);
+  controls.enableZoom = false;
+  controls.enablePan = false;
+  controls.enableDamping = true;
+  controls.autoRotate = false;
+  controls.autoRotateSpeed = 1.6;
+  controls.enabled = false;
+
+  const resize = () => {
+    const w = host.clientWidth;
+    const h = host.clientHeight;
+    renderer.setSize(w, h);
+    const aspect = w / h;
+    const s = w < 420 ? scale * 1.05 : scale;
+    camera.left = -s * aspect;
+    camera.right = s * aspect;
+    camera.top = s;
+    camera.bottom = -s;
+    camera.updateProjectionMatrix();
+  };
+  resize();
+  new ResizeObserver(resize).observe(host);
+
+  // Olhar segue o cursor
+  const look = new THREE.Vector2();
+  window.addEventListener('pointermove', (ev) => {
+    const r = host.getBoundingClientRect();
+    look.x = THREE.MathUtils.clamp(((ev.clientX - (r.left + r.width / 2)) / r.width) * 2, -1, 1);
+    look.y = THREE.MathUtils.clamp(-((ev.clientY - (r.top + r.height / 2)) / r.height) * 2, -1, 1);
+  });
+
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const easeOutCirc = (t: number) => Math.sqrt(1 - (t - 1) ** 2);
+  let frame = reduce ? 100 : 0;
+  let nextBlink = performance.now() + 2500;
+  let blinkUntil = 0;
+  const tmp = new THREE.Vector3();
+
+  spinner.remove();
+
+  const tick = (now: number) => {
+    if (frame <= 100) {
+      const t = easeOutCirc(frame / 100);
+      camera.position.lerpVectors(startPos, restPos, t);
+      camera.lookAt(target);
+      frame++;
+      if (frame > 100) {
+        controls.enabled = true;
+        controls.autoRotate = !reduce;
+      }
+    } else {
+      controls.update();
+    }
+
+    owl.position.y = reduce ? 0 : Math.sin(now / 900) * 0.18;
+
+    // Pupilas
+    for (const p of pupils) {
+      tmp.copy(p.userData.base);
+      tmp.x += look.x * 0.45;
+      tmp.y += look.y * 0.4;
+      p.position.lerp(tmp, 0.12);
+    }
+    // Piscar
+    if (now > nextBlink) {
+      blinkUntil = now + 140;
+      nextBlink = now + 2500 + Math.random() * 3500;
+    }
+    const sy = now < blinkUntil ? 0.12 : 1;
+    for (const p of pupils) p.scale.y += (sy - p.scale.y) * 0.5;
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+</script>
+
+<style>
+  .voxel-wrap {
+    position: relative;
+    margin: -24px auto -40px;
+    width: min(100%, 560px);
+    aspect-ratio: 1 / 1;
+    max-height: 460px;
+  }
+  .voxel { width: 100%; height: 100%; cursor: grab; }
+  .voxel:active { cursor: grabbing; }
+  .voxel :global(canvas) { display: block; }
+  .voxel-spinner {
+    position: absolute; inset: 50% auto auto 50%;
+    width: 28px; height: 28px; margin: -14px;
+    border: 3px solid var(--line); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>

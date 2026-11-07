@@ -1,0 +1,110 @@
+---
+import Base from '../layouts/Base.astro';
+import VoxelOwl from '../components/VoxelOwl.astro';
+import Icon from '../components/Icon.astro';
+import PostList from '../components/PostList.astro';
+import { site } from '../site.config';
+import { getPosts, withBase } from '../utils';
+
+const latest = (await getPosts()).slice(0, 3);
+const initials = site.name.split(' ').map((w) => w[0]).slice(0, 2).join('');
+---
+
+<Base>
+  <VoxelOwl />
+
+  <div class="greeting">{site.greeting}</div>
+
+  <div class="intro">
+    <div>
+      <h1 class="name">{site.name}</h1>
+      <p class="role">{site.role}</p>
+    </div>
+    <div class="avatar" aria-hidden="true">
+      <img src={withBase('/avatar.jpg')} alt="" onerror="this.remove()" />
+      <span>{initials}</span>
+    </div>
+  </div>
+
+  <section class="section">
+    <h2 class="section-title">Trabalho</h2>
+    {site.work.map((p) => <p class="text-justify">{p}</p>)}
+    <p style="text-align:center;margin-top:20px">
+      <a class="btn" href={withBase('/projetos/')}>Meus projetos <Icon name="arrow" size={16} /></a>
+    </p>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">Trajetória</h2>
+    <ul class="timeline">
+      {site.timeline.map((t) => (
+        <li><b>{t.year}</b><span>{t.text}</span></li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">Eu ♥</h2>
+    <p>{site.loves.join(', ')}.</p>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">Na web</h2>
+    <ul class="social">
+      {site.links.filter((l) => l.url).map((l) => (
+        <li>
+          <a href={l.url} target="_blank" rel="noopener">
+            <Icon name={l.icon} /> {l.label}
+          </a>
+        </li>
+      ))}
+      <li><a href={withBase('/rss.xml')}><Icon name="rss" /> RSS</a></li>
+    </ul>
+  </section>
+
+  {latest.length > 0 && (
+    <section class="section">
+      <h2 class="section-title">Últimos write-ups</h2>
+      <PostList posts={latest} />
+      <p style="text-align:center;margin-top:20px">
+        <a class="btn" href={withBase('/blog/')}>Todos os posts <Icon name="arrow" size={16} /></a>
+      </p>
+    </section>
+  )}
+</Base>
+
+<style>
+  .greeting {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin: 0 0 24px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+  .intro { display: flex; align-items: center; gap: 16px; }
+  .intro > div:first-child { flex: 1; }
+  .name { font-size: 2.1rem; font-weight: 800; margin: 0; letter-spacing: -0.01em; }
+  .role { margin: 2px 0 0; }
+  .avatar {
+    width: 100px; height: 100px; border-radius: 50%; flex: none; position: relative;
+    border: 2px solid var(--fg); overflow: hidden; display: grid; place-items: center;
+    background: linear-gradient(135deg, #8a5a36, #e1c095);
+  }
+  .avatar span { font-family: 'M PLUS Rounded 1c', sans-serif; font-weight: 800; font-size: 2rem; color: #fff; }
+  .avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+  .timeline { list-style: none; padding: 0; margin: 0; }
+  .timeline li { display: flex; gap: 16px; padding: 2px 0; }
+  .timeline b { flex: none; width: 3.2em; }
+  .social { list-style: none; padding: 0; margin: 0; display: grid; gap: 4px; }
+  .social a {
+    display: inline-flex; align-items: center; gap: 10px; padding: 6px 10px; margin-left: -10px;
+    border-radius: 8px; font-weight: 500;
+  }
+  .social a:hover { background: var(--tag-bg); text-decoration: none; }
+  @media (max-width: 480px) {
+    .intro { flex-direction: column-reverse; text-align: center; }
+    .name { font-size: 1.8rem; }
+  }
+</style>
