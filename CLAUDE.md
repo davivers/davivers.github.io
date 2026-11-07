@@ -97,7 +97,7 @@ public/
 - [ ] Preencher LinkedIn e e-mail em `src/site.config.ts` (`url: ''` esconde o link; há `TODO` no arquivo).
 - [ ] Descomentar `url` de `dac-lab` e `wazuh-monitor` em `projects.ts` quando os repos forem públicos.
 - [ ] Colocar a foto em `public/avatar.jpg`.
-- [x] Post modelo `exemplo-lsass-dump.md` virou `draft: true` (serve de referência no `npm run dev`; apagar quando houver posts reais).
+- [ ] Post modelo `exemplo-lsass-dump.md` está publicado (a pedido); substituir por um write-up real.
 - [x] `como-escrever.md` virou `draft: true`.
 - [x] Repositório `davivers/davivers.github.io` criado, push feito, Pages com fonte **GitHub Actions**.
 
