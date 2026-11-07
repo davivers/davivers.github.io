@@ -15,6 +15,13 @@ Contexto para o Claude Code continuar este projeto. Este arquivo **é** o mapa d
 - Não usar subagentes para buscas neste repo — ele é pequeno; `Grep`/`Glob` direto bastam.
 - Respostas curtas: o que mudou e o que falta.
 
+## Agentes e skills (`.claude/`, gitignored — adaptados do Vitrix)
+
+- Skills: `/context-optimize`, `/repo-map`, `/smart-plan`, `/implement`, `/verify` (validação proporcional), `/code-simplify`, `/session-summary`.
+- Agentes: `frontend-engineer` (Astro/Three.js), `product-ux-designer` (specs em `.claude/design/`), `devops-ci-cd-engineer` (Actions/Pages), `code-reviewer` (read-only), `detection-writeup-reviewer` (revisão técnica dos posts).
+- Use agente só quando a tarefa é grande ou pede outra perspectiva (revisão, write-up). Tarefa pequena: sessão principal direto.
+- Para o Claude Code carregar os agentes, abra o VS Code na pasta `portfolio/portfolio` (raiz do repo).
+
 ## O que é
 
 Site portfólio **estático** com blog para write-ups de segurança (detection engineering, SOC, blue team).
