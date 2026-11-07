@@ -1,7 +1,50 @@
+# Build output and dependencies
 node_modules/
 dist/
 .astro/
+
+# Secrets and environment (never commit)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.jks
+*.keystore
+id_rsa*
+id_ed25519*
+*.kdbx
+secrets.*
+credentials*.json
+*.secret
+.npmrc
+.netrc
+
+# Logs and debug files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+*~
 .DS_Store
+Thumbs.db
+desktop.ini
 
 # Claude Code (personal, like in Vitrix)
 .claude/
+CLAUDE.local.md
+
+# Local scratch
+*.local
+tmp/
+.cache/
