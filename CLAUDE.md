@@ -1,6 +1,19 @@
 # CLAUDE.md — Portfólio de David Lima
 
-Contexto para o Claude Code continuar este projeto. Leia inteiro antes de mexer.
+Contexto para o Claude Code continuar este projeto. Este arquivo **é** o mapa do projeto — não releia o repositório inteiro para descobrir a estrutura.
+
+## Economia de tokens (regras de trabalho)
+
+- **Não explorar o projeto inteiro.** Use a seção *Estrutura* abaixo para ir direto ao arquivo certo; leia só os arquivos que a tarefa toca (e só o trecho necessário em arquivos grandes como `VoxelOwl.astro`).
+- **Não reler** arquivos já lidos na sessão nem para "conferir" uma edição que deu certo.
+- **Não reinstalar**: só rode `npm install` se `node_modules/` não existir ou se `package.json` mudou.
+- **Validação proporcional à mudança**, uma vez no fim (não a cada edição):
+  - só texto/Markdown/CSS → nenhuma validação (o `npm run dev` recarrega sozinho);
+  - `.ts`/`.astro` → `npm run check`;
+  - config, dependências, rotas ou schema → `npm run check` e `npm run build`.
+- Não subir `npm run dev` se já estiver rodando (porta 4321) e não abrir o site/HTML gerado para verificação, a menos que pedido.
+- Não usar subagentes para buscas neste repo — ele é pequeno; `Grep`/`Glob` direto bastam.
+- Respostas curtas: o que mudou e o que falta.
 
 ## O que é
 
