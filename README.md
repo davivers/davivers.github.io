@@ -2,15 +2,6 @@
 
 Site estático em Astro, com uma coruja voxel 3D (Three.js) na home, abas **Projetos** e **Blog** e tema claro/escuro.
 
-## Rodar localmente (PowerShell)
-
-```powershell
-npm install
-npm run dev
-```
-
-Abra http://localhost:4321.
-
 ## Onde editar
 
 | O quê | Arquivo |
