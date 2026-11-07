@@ -42,7 +42,7 @@ figura **voxel 3D** girando no topo, bio, trajetória, links, e abas separadas.
 | Figura 3D | **Coruja vigia voxel original**, gerada em código (sem arquivo de modelo). **Não** usar o cachorro voxel do craftz.dog — o modelo é do Takuya. |
 | Visual | Estilo clássico craftz.dog: fundo creme `#f0e7db` (claro) / `#202023` (escuro), títulos em **M PLUS Rounded 1c**, corpo **Inter**, código **JetBrains Mono**, títulos de seção sublinhados grossos. |
 | Acento | Claro: azul `#2f6fdb`. Escuro: teal `#5eead4`. Botão de tema roxo (lua) no claro, laranja (sol) no escuro. |
-| Deploy | **GitHub Pages** via GitHub Actions (`.github/workflows/deploy.yml`, roda `npm run check` antes do build). Repo: `davivers/davivers.github.io` → https://davivers.github.io |
+| Deploy | **GitHub Pages** via GitHub Actions (`.github/workflows/deploy.yml`, Node 24, actions checkout/setup-node v7, pages v5; roda `npm run check` antes do build). Repo: `davivers/davivers.github.io` → https://davivers.github.io |
 | Tipagem | TypeScript **strict** (`tsconfig.json`). Tipos de configuração em `src/types.ts`, código e comentários de código em **inglês**; textos visíveis do site seguem em pt-BR. |
 
 ## Estrutura
@@ -97,8 +97,8 @@ public/
 - [ ] Preencher LinkedIn e e-mail em `src/site.config.ts` (`url: ''` esconde o link; há `TODO` no arquivo).
 - [ ] Descomentar `url` de `dac-lab` e `wazuh-monitor` em `projects.ts` quando os repos forem públicos.
 - [ ] Colocar a foto em `public/avatar.jpg`.
-- [ ] Apagar ou substituir o post modelo `src/content/blog/exemplo-lsass-dump.md` (tem `[Exemplo]` no título).
-- [ ] Opcional: o post `como-escrever.md` é um guia de uso; pode virar `draft: true`.
+- [x] Post modelo `exemplo-lsass-dump.md` virou `draft: true` (serve de referência no `npm run dev`; apagar quando houver posts reais).
+- [x] `como-escrever.md` virou `draft: true`.
 - [x] Repositório `davivers/davivers.github.io` criado, push feito, Pages com fonte **GitHub Actions**.
 
 ## Ideias combinadas para depois

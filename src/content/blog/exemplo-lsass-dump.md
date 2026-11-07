@@ -3,6 +3,7 @@ title: "[Exemplo] Detectando dump de LSASS com Sysmon e Wazuh"
 description: "Modelo de write-up: hipótese, telemetria, regra, teste com Atomic Red Team e tuning. Apague ou substitua pelo seu."
 date: 2026-11-07
 tags: [wazuh, sysmon, detection, windows]
+draft: true
 ---
 
 > **Este é um post de exemplo** para mostrar o formato. Troque pelo seu write-up ou apague o arquivo `src/content/blog/exemplo-lsass-dump.md`.

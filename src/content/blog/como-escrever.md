@@ -3,7 +3,7 @@ title: "Como publicar um write-up neste site"
 description: "Crie um arquivo .md, preencha o cabeçalho e faça push. O resto é automático."
 date: 2026-11-06
 tags: [meta]
-draft: false
+draft: true
 ---
 
 ## 1. Crie o arquivo
