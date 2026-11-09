@@ -89,6 +89,14 @@ pip-audit -r "$RUNNER_TEMP/toolchain-freeze.txt" --no-deps --disable-pip --desc 
   --ignore-vuln PYSEC-2026-2447
 ```
 
+O workflow que valida as regras instala o mesmo arquivo. Assim, a versão auditada é a mesma que gera as queries:
+
+```yaml
+# Installs the commit pinned in requirements-ci.txt. Never install a bare "vitrix" here.
+- name: Install Vitrix
+  run: pip install -r requirements-ci.txt
+```
+
 ### Por que essas escolhas?
 
 - **`persist-credentials: false`** evita que o `GITHUB_TOKEN` fique gravado no `.git/config` durante o restante do job.
@@ -98,6 +106,7 @@ pip-audit -r "$RUNNER_TEMP/toolchain-freeze.txt" --no-deps --disable-pip --desc 
 - **Ambientes separados** impedem que as ferramentas de auditoria entrem no resultado do toolchain auditado.
 - **Execução semanal** detecta CVEs novas em dependências mesmo quando ninguém fez commit.
 - **`--strict` no pip-audit** faz o job falhar quando alguma dependência da lista não pode ser auditada.
+- **Vitrix fixado por commit** evita instalar um pacote de mesmo nome que alguém venha a publicar no PyPI.
 
 ### A exceção do `diskcache`
 
@@ -115,6 +124,7 @@ A primeira versão do workflow nunca executou. Estes foram os bloqueios e as cor
 | Faltavam `.gitleaks-data.toml`, `.yamllint.yml` e `requirements-ci.txt` | Jobs falhariam | Criar os arquivos |
 | Actions sem SHA e sem `persist-credentials: false` | Reprovação no zizmor | Fixar por SHA e desativar a persistência |
 | `pip-audit --strict` com pacote fora do PyPI | Auditoria abortada | Auditar as versões instaladas sem o Vitrix |
+| `pip install vitrix` no workflow de validação | Com o nome livre no PyPI, quem o registrasse poderia executar código no CI | Instalar pelo `requirements-ci.txt` |
 
 O erro mais simples foi o mais silencioso: sem a extensão, não houve execução com falha, porque o workflow nem chegou a existir para o GitHub.
 
@@ -127,7 +137,13 @@ Depois das correções, os quatro jobs passaram no GitHub Actions:
 | `static` | yamllint aprovado, zizmor sem achados a partir de severidade média |
 | `toolchain` | Sem vulnerabilidades, com a exceção acima, e SBOM gerado como artefato |
 
-A separação de responsabilidades também apareceu na prática. No mesmo commit em que o pipeline de segurança passou, o `vitrix check` reprovou uma regra de modelo que disparava em um evento legítimo do SCCM. Removida a regra, os dois workflows ficaram verdes, com 11 de 11 casos de teste aprovados.
+A separação de responsabilidades também apareceu na prática. No mesmo commit em que o pipeline de segurança passou, o `vitrix check` reprovou uma regra de modelo que disparava em um evento legítimo do SCCM.
+
+Depois, atualizei o Vitrix para uma versão em que o replay é apenas informativo. O arquivo `.expect.yml` não reprova mais regras, e uma regra de modelo com a mesma lógica voltou a ser aprovada. Agora, uma mudança no número de eventos detectados só aparece ao rodar `vitrix replay`.
+
+O `vitrix check --strict` também gerou uma falha pouco óbvia. Uma regra de teste tinha a mesma lógica de outra, o que produziu um aviso de lint. O quality gate indicou 4 de 4 regras prontas, mas o job terminou com erro, porque `allow_warnings: true` vale para o gate e o `--strict` transforma qualquer aviso em falha.
+
+Depois de mudar o `logsource` da regra de teste, o aviso sumiu e os dois workflows passaram, com 19 de 19 casos aprovados. Das 4 regras aprovadas, 2 ainda são regras de teste.
 
 Em um teste local, as regras de higiene detectaram IP privado, e-mail e hostname em um arquivo de exemplo, sem mostrar os valores no relatório.
 
@@ -141,7 +157,7 @@ Validar regras e proteger o repositório são problemas diferentes. O `vitrix ch
 
 A principal lição veio do erro mais simples: um workflow que não existe para o GitHub não falha, apenas não roda. Ter o arquivo no repositório não prova nada. O que conta é ver o job executar.
 
-O trabalho ainda não terminou. Falta o teste de ponta a ponta com um pull request, e o `data-hygiene` continua apenas informativo enquanto as regras não refletem o ambiente real.
+O trabalho ainda não terminou. Falta o teste de ponta a ponta com um pull request, os checks ainda não são obrigatórios na `main`, e o `data-hygiene` continua apenas informativo enquanto as regras não refletem o ambiente real. Com o replay apenas informativo, mudanças no comportamento das regras também precisam ser revisadas com `vitrix replay`.
 
 ## Referências
 
