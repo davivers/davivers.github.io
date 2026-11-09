@@ -1,6 +1,6 @@
 ---
 title: "CI de segurança para um repositório de Detection-as-Code"
-description: "Segredos, dados sensíveis em casos de teste, workflows e toolchain: como montei um pipeline de segurança no GitHub Actions para um repo de regras Sigma, e o que impedia ele de rodar."
+description: "Segredos, dados sensíveis em casos de teste, workflows e toolchain: como montei um pipeline de segurança no GitHub Actions para um repo de regras Sigma, e por que a primeira versão nunca rodou."
 date: 2026-11-09
 tags: [detection-as-code, github-actions, ci-cd, supply-chain]
 draft: false
@@ -15,7 +15,7 @@ draft: false
 | Plataforma | GitHub Actions |
 | Gatilhos | Pull request, push na `main`, semanal (segunda, 06:23 UTC) e manual |
 | Ferramentas | gitleaks 8.30.0, yamllint 1.38.0, zizmor 1.32.0, pip-audit 2.10.1, Syft (via `anchore/sbom-action`) |
-| Status | Corrigido e validado localmente, primeira execução no GitHub pendente |
+| Status | Quatro jobs aprovados na `main` |
 
 ## Hipótese
 
@@ -118,21 +118,20 @@ A primeira versão do workflow nunca executou. Estes foram os bloqueios e as cor
 
 O erro mais simples foi o mais silencioso: sem a extensão, não houve execução com falha, porque o workflow nem chegou a existir para o GitHub.
 
-Depois das correções, rodei as verificações localmente, no Windows e com Python 3.12:
+Depois das correções, os quatro jobs passaram no GitHub Actions:
 
-| Verificação | Resultado |
+| Job | Resultado na `main` |
 | --- | --- |
-| actionlint nos workflows | Sem erros |
-| yamllint em `rules`, `cases` e `vitrix.yml` | Sem erros |
-| zizmor, offline, a partir de severidade média | Sem achados |
-| gitleaks no histórico | Nenhum segredo encontrado |
-| Higiene de dados no repositório | 0 ocorrências |
-| Higiene de dados em um arquivo de teste | IP privado, e-mail e hostname detectados, com valores ocultos |
-| pip-audit no toolchain | Sem vulnerabilidades, com a exceção acima |
+| `secrets` | Nenhum segredo encontrado, SARIF enviado ao Code Scanning com 0 resultados |
+| `data-hygiene` | 0 ocorrências |
+| `static` | yamllint aprovado, zizmor sem achados a partir de severidade média |
+| `toolchain` | Sem vulnerabilidades, com a exceção acima, e SBOM gerado como artefato |
 
-O upload do SARIF, a geração do SBOM e os jobs no runner Linux só podem ser confirmados na primeira execução no GitHub.
+A separação de responsabilidades também apareceu na prática. No mesmo commit em que o pipeline de segurança passou, o `vitrix check` reprovou uma regra de modelo que disparava em um evento legítimo do SCCM. Removida a regra, os dois workflows ficaram verdes, com 11 de 11 casos de teste aprovados.
 
-O próximo teste será um pull request com um segredo falso e um hostname fictício em um caso de teste.
+Em um teste local, as regras de higiene detectaram IP privado, e-mail e hostname em um arquivo de exemplo, sem mostrar os valores no relatório.
+
+O teste de ponta a ponta ainda está pendente: um pull request com um segredo falso e um hostname fictício em um caso de teste.
 
 Resultado esperado: o job `secrets` falha com o achado no Code Scanning, e o `data-hygiene` lista regra, arquivo e linha no Summary, sem mostrar o valor.
 
@@ -142,6 +141,7 @@ Resultado esperado: o job `secrets` falha com o achado no Code Scanning, e o `da
 - Tornar o `data-hygiene` bloqueante quando o volume de falsos positivos estiver baixo, removendo o `--exit-code 0`.
 - Verificar o checksum do tarball do gitleaks, hoje baixado com `curl` sem validação de integridade.
 - Usar o `requirements-ci.txt` também no `vitrix.yml`, para que o toolchain auditado seja o mesmo que valida as regras.
+- Migrar o `upload-sarif` para uma versão nova do CodeQL Action, porque a v3 será descontinuada em dezembro de 2026.
 - Remover a exceção do `diskcache` quando houver versão corrigida.
 - Exigir os quatro jobs como status checks obrigatórios na `main`.
 
@@ -151,7 +151,6 @@ Resultado esperado: o job `secrets` falha com o achado no Code Scanning, e o `da
 - [zizmor: auditorias](https://docs.zizmor.sh/audits/)
 - [pip-audit](https://github.com/pypa/pip-audit)
 - [yamllint](https://yamllint.readthedocs.io/)
-- [actionlint](https://github.com/rhysd/actionlint)
 - [Syft](https://github.com/anchore/syft)
 - [GitHub Docs: Security hardening for GitHub Actions](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions)
 - [Vitrix](https://github.com/davivers/vitrix)
