@@ -135,15 +135,13 @@ O teste de ponta a ponta ainda está pendente: um pull request com um segredo fa
 
 Resultado esperado: o job `secrets` falha com o achado no Code Scanning, e o `data-hygiene` lista regra, arquivo e linha no Summary, sem mostrar o valor.
 
-## Tuning
+## Considerações finais
 
-- Acrescentar ao `.gitleaks-data.toml` os domínios, hostnames e padrões reais do ambiente.
-- Tornar o `data-hygiene` bloqueante quando o volume de falsos positivos estiver baixo, removendo o `--exit-code 0`.
-- Verificar o checksum do tarball do gitleaks, hoje baixado com `curl` sem validação de integridade.
-- Usar o `requirements-ci.txt` também no `vitrix.yml`, para que o toolchain auditado seja o mesmo que valida as regras.
-- Migrar o `upload-sarif` para uma versão nova do CodeQL Action, porque a v3 será descontinuada em dezembro de 2026.
-- Remover a exceção do `diskcache` quando houver versão corrigida.
-- Exigir os quatro jobs como status checks obrigatórios na `main`.
+Validar regras e proteger o repositório são problemas diferentes. O `vitrix check` responde se a detecção funciona. Os quatro jobs deste pipeline respondem se o repositório que guarda essa detecção é seguro. A regra reprovada no mesmo commit em que o pipeline de segurança passou mostra que um não substitui o outro.
+
+A principal lição veio do erro mais simples: um workflow que não existe para o GitHub não falha, apenas não roda. Ter o arquivo no repositório não prova nada. O que conta é ver o job executar.
+
+O trabalho ainda não terminou. Falta o teste de ponta a ponta com um pull request, e o `data-hygiene` continua apenas informativo enquanto as regras não refletem o ambiente real.
 
 ## Referências
 
